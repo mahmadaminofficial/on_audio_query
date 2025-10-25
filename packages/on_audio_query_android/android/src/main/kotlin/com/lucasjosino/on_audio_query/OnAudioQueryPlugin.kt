@@ -57,6 +57,11 @@ class OnAudioQueryPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         // Setup the method channel communication.
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, CHANNEL_NAME)
         channel.setMethodCallHandler(this)
+        // Initialize plugin provider with application context so calls that only need a
+        // Context (and not an Activity) can work when the app is running in background
+        // (for example: Android Auto). Activity, when available, will overwrite this
+        // reference in onAttachedToActivity.
+        PluginProvider.setContext(flutterPluginBinding.applicationContext)
     }
 
     // Methods will always follow the same route:

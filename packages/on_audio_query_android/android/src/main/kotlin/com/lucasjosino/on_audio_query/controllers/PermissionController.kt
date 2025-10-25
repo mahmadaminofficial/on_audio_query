@@ -46,13 +46,30 @@ class PermissionController : PermissionManagerInterface,
     override fun requestPermission() {
         Log.d(TAG, "Requesting permissions.")
         Log.d(TAG, "SDK: ${Build.VERSION.SDK_INT}, Should retry request: $retryRequest")
-        val activity = PluginProvider.activity()
+        val activity = PluginProvider.activityOrNull()
+        if (activity == null) {
+            Log.w(TAG, "requestPermission called but no Activity is available to show permission dialog")
+            // If a result is available, return an error, otherwise just abort.
+            val result = PluginProvider.resultOrNull()
+            result?.error(
+                "NoActivity",
+                "Cannot request permissions because Activity is not available (background / Android Auto).",
+                null
+            )
+            return
+        }
+
         ActivityCompat.requestPermissions(activity, permissions, REQUEST_CODE)
     }
 
     // Second requestPermission, this one with the option "Never Ask Again".
     override fun retryRequestPermission() {
-        val activity = PluginProvider.activity()
+        val activity = PluginProvider.activityOrNull()
+        if (activity == null) {
+            Log.w(TAG, "retryRequestPermission called but no Activity is available")
+            return
+        }
+
         if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permissions[0])
             || ActivityCompat.shouldShowRequestPermissionRationale(activity, permissions[1])
         ) {
